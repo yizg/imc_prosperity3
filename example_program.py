@@ -153,6 +153,7 @@ class Trader:
             "SQUID_INK": 0,
         }
 
+    def get_fair_value(self, state: TradingState, product: str):
         if product == "RAINFOREST_RESIN":
             fair_value = 10000
         elif product == "KELP":
