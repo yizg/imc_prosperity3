@@ -124,6 +124,29 @@ class Logger:
 logger = Logger()
 
 
+GRIDSEARCH = True
+PARAMS = {
+    "KELP": {
+        "bid_fair_diff_threshold": 2,
+        "ask_fair_diff_threshold": 2,
+        "default_edge": 0
+    },
+    "RAINFOREST_RESIN": {
+        "bid_fair_diff_threshold": 5,
+        "ask_fair_diff_threshold": 5,
+        "default_edge": 4
+    },
+    "SQUID_INK": {
+        "bid_fair_diff_threshold": 6,
+        "ask_fair_diff_threshold": 6,
+        "default_edge": 4
+    },
+
+
+}
+
+
+
 def get_mid_price(state: TradingState, symbol: str) -> float:
     order_depth = state.order_depths[symbol]
     buy_orders = sorted(order_depth.buy_orders.items(), reverse=True)
@@ -152,6 +175,15 @@ class Trader:
             "KELP": 0,
             "SQUID_INK": 0,
         }
+        
+        self.params = {}
+        if GRIDSEARCH:
+            for product in self.limits:
+                config_path = f"config/{product}.json"
+                with open(config_path, "r") as f:
+                    self.params[product] = json.load(f)
+        else:
+            self.params = PARAMS
 
     def get_fair_value(self, state: TradingState, product: str):
         if product == "RAINFOREST_RESIN":
@@ -186,64 +218,67 @@ class Trader:
     def market_orders(self, state: TradingState, product: str):
         output = []
         order_depth = state.order_depths[product]
-
-        # buy_orders = sorted(order_depth.buy_orders.items(), reverse=True)
-        # sell_orders = sorted(order_depth.sell_orders.items())
         buy_orders = order_depth.buy_orders
         sell_orders = order_depth.sell_orders
         fair_value = self.get_fair_value(state, product)
-
         limit = self.limits[product]
         pos = self.get_position(state, product)
 
-        asks_above_fair = [
-            price for price in sell_orders.keys() if price > fair_value]
-        bids_below_fair = [
-            price for price in buy_orders.keys() if price < fair_value]
+        param = self.params[product]
+        ask_threshold = param["ask_fair_diff_threshold"]
+        bid_threshold = param["bid_fair_diff_threshold"]
+        default_edge = param["default_edge"]
+        ask_volume_threshold = param.get("ask_volume_threshold", 2)
+        bid_volume_threshold = param.get("bid_volume_threshold", 2)
 
-        best_ask_above_fair = min(asks_above_fair) if len(
-            asks_above_fair) > 0 else None
-        best_bid_below_fair = max(bids_below_fair) if len(
-            bids_below_fair) > 0 else None
+        asks_above_fair = [price for price in sell_orders.keys() if price > fair_value]
+        bids_below_fair = [price for price in buy_orders.keys() if price < fair_value]
 
-        # max_buy_price = fair_value - 1 if pos > limit * 0.5 else fair_value
-        # min_sell_price = fair_value + 1 if pos < limit * -0.5 else fair_value
 
-        default_edge = 1
+        #asks_volume_counter = sum([0 if sell_orders[price] < ask_volume_threshold else 1 for price in asks_above_fair])
+        #bids_volume_counter = sum([0 if buy_orders[price] < bid_volume_threshold else 1 for price in bids_below_fair])
+
+        if product in state.position:
+            cur_position = state.position[product]
+        else:
+             cur_position = 0
+
+        best_ask = min(order_depth.sell_orders.keys())
+        best_bid = max(order_depth.buy_orders.keys())
+        value = (best_ask + best_bid) / 2
+        skew = -cur_position * value*0.0000005
+
+        best_ask_above_fair = min(asks_above_fair) if asks_above_fair else None
+        best_bid_below_fair = max(bids_below_fair) if bids_below_fair else None
+
         ask = round(fair_value + default_edge)
-        if best_ask_above_fair != None:
-            if abs(best_ask_above_fair - fair_value) <= 3:
-                ask = best_ask_above_fair  # join
+        if best_ask_above_fair is not None:
+            if abs(best_ask_above_fair - fair_value) <= ask_threshold:
+                ask = best_ask_above_fair
             else:
-                ask = best_ask_above_fair - 1  # penny
+                ask = best_ask_above_fair - 1
 
         bid = round(fair_value - default_edge)
-        if best_bid_below_fair != None:
-            if abs(fair_value - best_bid_below_fair) <= 3:
+        if best_bid_below_fair is not None:
+            if abs(fair_value - best_bid_below_fair) <= bid_threshold:
                 bid = best_bid_below_fair
             else:
                 bid = best_bid_below_fair + 1
-
-        # if pos > limit * 0.5:
-        #     # bid -= 1
-        #     ask -= 1
-        # elif pos < limit * -0.5:
-        #     ask += 1
-        #     # bid += 1
+        #if product == "SQUID_INK":
+        #    bid += skew
+        #    ask += skew
 
         buy_quantity = (limit - pos - self.take_buy_volume[product])
         if pos > limit * 0.5:
             buy_quantity = buy_quantity
         if buy_quantity > 0:
-            output.append(Order(product, round(bid),
-                          buy_quantity))  # Buy order
+            output.append(Order(product, round(bid), buy_quantity))
 
         sell_quantity = (limit + pos - self.take_sell_volume[product])
         if pos < limit * -0.5:
             sell_quantity = sell_quantity
         if sell_quantity > 0:
-            output.append(Order(product, round(ask), -
-                          sell_quantity))  # Sell order
+            output.append(Order(product, round(ask), -sell_quantity))
 
         return output
 
@@ -255,23 +290,6 @@ class Trader:
         # Iterate over all the keys (the available products) contained in the order dephts
         for product in state.order_depths.keys():
             orders = []
-
-            # if product != "KELP":
-            #     continue
-            # market_trades = state.market_trades[product]
-            # logger.print(state.market_trades)
-
-            # if len(market_trades) > 0:
-            #     # Get the last trade price
-            #     last_trade_price = market_trades[-1].price
-            #     # acceptable_price = min(order_depth.sell_orders.keys()) + max(
-            #     #     order_depth.buy_orders.keys()) / 2
-
-            # value = (best_ask + best_bid) / 2
-            # spread = (best_ask - best_bid) + value*0.005
-            # skew = -cur_position * value*0.002
-            # ask_price = int(value + skew + spread/2)
-            # bid_price = int(value + skew - spread/2)
 
             take_orders = self.take_orders(state, product)
             market_orders = self.market_orders(state, product)
