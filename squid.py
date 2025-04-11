@@ -429,12 +429,347 @@ class Squid(Product):
 
         return output
 
+
+class Croissants(Product):
+    def __init__(self):
+        super().__init__()
+        self.limits = 250
+
+    def market_orders(self, state: TradingState, product: str):
+        output = []
+        order_depth = state.order_depths[product]
+
+        # buy_orders = sorted(order_depth.buy_orders.items(), reverse=True)
+        # sell_orders = sorted(order_depth.sell_orders.items())
+        buy_orders = order_depth.buy_orders
+        sell_orders = order_depth.sell_orders
+        fair_value = self.get_fair_value(state, product)
+
+        limit = self.limits
+        pos = get_position(state, product)
+
+        asks_above_fair = [
+            price for price in sell_orders.keys() if price > fair_value]
+        bids_below_fair = [
+            price for price in buy_orders.keys() if price < fair_value]
+
+        best_ask_above_fair = min(asks_above_fair) if len(
+            asks_above_fair) > 0 else None
+        best_bid_below_fair = max(bids_below_fair) if len(
+            bids_below_fair) > 0 else None
+
+        # max_buy_price = fair_value - 1 if pos > limit * 0.5 else fair_value
+        # min_sell_price = fair_value + 1 if pos < limit * -0.5 else fair_value
+
+        default_edge = 1
+        ask = round(fair_value + default_edge)
+        if best_ask_above_fair != None:
+            if abs(best_ask_above_fair - fair_value) <= 3:
+                ask = best_ask_above_fair  # join
+            else:
+                ask = best_ask_above_fair - 1  # penny
+
+        bid = round(fair_value - default_edge)
+        if best_bid_below_fair != None:
+            if abs(fair_value - best_bid_below_fair) <= 3:
+                bid = best_bid_below_fair
+            else:
+                bid = best_bid_below_fair + 1
+
+        if pos < limit * -0.1:
+            ask += 1
+        elif pos > limit * 0.1:
+            bid -= 1
+
+        buy_quantity = (limit - pos - self.take_buy_volume)
+        if buy_quantity > 0:
+            output.append(Order(product, round(bid),
+                                buy_quantity))  # Buy order
+
+        sell_quantity = (limit + pos - self.take_sell_volume)
+        if sell_quantity > 0:
+            output.append(Order(product, round(ask), -
+            sell_quantity))  # Sell order
+
+        return output
+
+class Jams(Product):
+    def __init__(self):
+        super().__init__()
+        self.limits = 350
+
+    def market_orders(self, state: TradingState, product: str):
+        output = []
+        order_depth = state.order_depths[product]
+
+        # buy_orders = sorted(order_depth.buy_orders.items(), reverse=True)
+        # sell_orders = sorted(order_depth.sell_orders.items())
+        buy_orders = order_depth.buy_orders
+        sell_orders = order_depth.sell_orders
+        fair_value = self.get_fair_value(state, product)
+
+        limit = self.limits
+        pos = get_position(state, product)
+
+        asks_above_fair = [
+            price for price in sell_orders.keys() if price > fair_value]
+        bids_below_fair = [
+            price for price in buy_orders.keys() if price < fair_value]
+
+        best_ask_above_fair = min(asks_above_fair) if len(
+            asks_above_fair) > 0 else None
+        best_bid_below_fair = max(bids_below_fair) if len(
+            bids_below_fair) > 0 else None
+
+        # max_buy_price = fair_value - 1 if pos > limit * 0.5 else fair_value
+        # min_sell_price = fair_value + 1 if pos < limit * -0.5 else fair_value
+
+        default_edge = 1
+        ask = round(fair_value + default_edge)
+        if best_ask_above_fair != None:
+            if abs(best_ask_above_fair - fair_value) <= 3:
+                ask = best_ask_above_fair  # join
+            else:
+                ask = best_ask_above_fair - 1  # penny
+
+        bid = round(fair_value - default_edge)
+        if best_bid_below_fair != None:
+            if abs(fair_value - best_bid_below_fair) <= 3:
+                bid = best_bid_below_fair
+            else:
+                bid = best_bid_below_fair + 1
+
+        if pos < limit * -0.1:
+            ask += 1
+        elif pos > limit * 0.1:
+            bid -= 1
+
+        buy_quantity = (limit - pos - self.take_buy_volume)
+        if buy_quantity > 0:
+            output.append(Order(product, round(bid),
+                                buy_quantity))  # Buy order
+
+        sell_quantity = (limit + pos - self.take_sell_volume)
+        if sell_quantity > 0:
+            output.append(Order(product, round(ask), -
+            sell_quantity))  # Sell order
+
+        return output
+
+class Djembes(Product):
+    def __init__(self):
+        super().__init__()
+        self.limits = 60
+
+    def market_orders(self, state: TradingState, product: str):
+        output = []
+        order_depth = state.order_depths[product]
+
+        # buy_orders = sorted(order_depth.buy_orders.items(), reverse=True)
+        # sell_orders = sorted(order_depth.sell_orders.items())
+        buy_orders = order_depth.buy_orders
+        sell_orders = order_depth.sell_orders
+        fair_value = self.get_fair_value(state, product)
+
+        limit = self.limits
+        pos = get_position(state, product)
+
+        asks_above_fair = [
+            price for price in sell_orders.keys() if price > fair_value]
+        bids_below_fair = [
+            price for price in buy_orders.keys() if price < fair_value]
+
+        best_ask_above_fair = min(asks_above_fair) if len(
+            asks_above_fair) > 0 else None
+        best_bid_below_fair = max(bids_below_fair) if len(
+            bids_below_fair) > 0 else None
+
+        # max_buy_price = fair_value - 1 if pos > limit * 0.5 else fair_value
+        # min_sell_price = fair_value + 1 if pos < limit * -0.5 else fair_value
+
+        default_edge = 1
+        ask = round(fair_value + default_edge)
+        if best_ask_above_fair != None:
+            if abs(best_ask_above_fair - fair_value) <= 3:
+                ask = best_ask_above_fair  # join
+            else:
+                ask = best_ask_above_fair - 1  # penny
+
+        bid = round(fair_value - default_edge)
+        if best_bid_below_fair != None:
+            if abs(fair_value - best_bid_below_fair) <= 3:
+                bid = best_bid_below_fair
+            else:
+                bid = best_bid_below_fair + 1
+
+        if pos < limit * -0.1:
+            ask += 1
+        elif pos > limit * 0.1:
+            bid -= 1
+
+        buy_quantity = (limit - pos - self.take_buy_volume)
+        if buy_quantity > 0:
+            output.append(Order(product, round(bid),
+                                buy_quantity))  # Buy order
+
+        sell_quantity = (limit + pos - self.take_sell_volume)
+        if sell_quantity > 0:
+            output.append(Order(product, round(ask), -
+            sell_quantity))  # Sell order
+
+        return output
+
+class Picnic1(Product):
+    def __init__(self):
+        super().__init__()
+        self.limits = 60
+
+    def get_fair_value(self, state: TradingState, product: str):
+        croissant_mid_price = get_mid_price(state, "CROISSANTS")
+        djembes_mid_price = get_mid_price(state, "DJEMBES")
+        jams_mid_price = get_mid_price(state, "JAMS")
+
+        return 6 * croissant_mid_price + djembes_mid_price + 3 * jams_mid_price
+
+    def market_orders(self, state: TradingState, product: str):
+        output = []
+        order_depth = state.order_depths[product]
+
+        # buy_orders = sorted(order_depth.buy_orders.items(), reverse=True)
+        # sell_orders = sorted(order_depth.sell_orders.items())
+        buy_orders = order_depth.buy_orders
+        sell_orders = order_depth.sell_orders
+        fair_value = self.get_fair_value(state, product)
+
+        limit = self.limits
+        pos = get_position(state, product)
+
+        asks_above_fair = [
+            price for price in sell_orders.keys() if price > fair_value]
+        bids_below_fair = [
+            price for price in buy_orders.keys() if price < fair_value]
+
+        best_ask_above_fair = min(asks_above_fair) if len(
+            asks_above_fair) > 0 else None
+        best_bid_below_fair = max(bids_below_fair) if len(
+            bids_below_fair) > 0 else None
+
+        # max_buy_price = fair_value - 1 if pos > limit * 0.5 else fair_value
+        # min_sell_price = fair_value + 1 if pos < limit * -0.5 else fair_value
+
+        default_edge = 1
+        ask = round(fair_value + default_edge)
+        if best_ask_above_fair != None:
+            if abs(best_ask_above_fair - fair_value) <= 3:
+                ask = best_ask_above_fair  # join
+            else:
+                ask = best_ask_above_fair - 1  # penny
+
+        bid = round(fair_value - default_edge)
+        if best_bid_below_fair != None:
+            if abs(fair_value - best_bid_below_fair) <= 3:
+                bid = best_bid_below_fair
+            else:
+                bid = best_bid_below_fair + 1
+
+        if pos < limit * -0.1:
+            ask += 1
+        elif pos > limit * 0.1:
+            bid -= 1
+
+        buy_quantity = (limit - pos - self.take_buy_volume)
+        if buy_quantity > 0:
+            output.append(Order(product, round(bid),
+                                buy_quantity))  # Buy order
+
+        sell_quantity = (limit + pos - self.take_sell_volume)
+        if sell_quantity > 0:
+            output.append(Order(product, round(ask), -
+            sell_quantity))  # Sell order
+
+        return output
+
+class Picnic2(Product):
+    def __init__(self):
+        super().__init__()
+        self.limits = 100
+
+    def get_fair_value(self, state: TradingState, product: str):
+        croissant_mid_price = get_mid_price(state, "CROISSANTS")
+        djembes_mid_price = get_mid_price(state, "DJEMBES")
+        jams_mid_price = get_mid_price(state, "JAMS")
+
+        return 4 * croissant_mid_price + 2 * jams_mid_price
+
+    def market_orders(self, state: TradingState, product: str):
+        output = []
+        order_depth = state.order_depths[product]
+
+        # buy_orders = sorted(order_depth.buy_orders.items(), reverse=True)
+        # sell_orders = sorted(order_depth.sell_orders.items())
+        buy_orders = order_depth.buy_orders
+        sell_orders = order_depth.sell_orders
+        fair_value = self.get_fair_value(state, product)
+
+        limit = self.limits
+        pos = get_position(state, product)
+
+        asks_above_fair = [
+            price for price in sell_orders.keys() if price > fair_value]
+        bids_below_fair = [
+            price for price in buy_orders.keys() if price < fair_value]
+
+        best_ask_above_fair = min(asks_above_fair) if len(
+            asks_above_fair) > 0 else None
+        best_bid_below_fair = max(bids_below_fair) if len(
+            bids_below_fair) > 0 else None
+
+        # max_buy_price = fair_value - 1 if pos > limit * 0.5 else fair_value
+        # min_sell_price = fair_value + 1 if pos < limit * -0.5 else fair_value
+
+        default_edge = 1
+        ask = round(fair_value + default_edge)
+        if best_ask_above_fair != None:
+            if abs(best_ask_above_fair - fair_value) <= 3:
+                ask = best_ask_above_fair  # join
+            else:
+                ask = best_ask_above_fair - 1  # penny
+
+        bid = round(fair_value - default_edge)
+        if best_bid_below_fair != None:
+            if abs(fair_value - best_bid_below_fair) <= 3:
+                bid = best_bid_below_fair
+            else:
+                bid = best_bid_below_fair + 1
+
+        if pos < limit * -0.1:
+            ask += 1
+        elif pos > limit * 0.1:
+            bid -= 1
+
+        buy_quantity = (limit - pos - self.take_buy_volume)
+        if buy_quantity > 0:
+            output.append(Order(product, round(bid),
+                                buy_quantity))  # Buy order
+
+        sell_quantity = (limit + pos - self.take_sell_volume)
+        if sell_quantity > 0:
+            output.append(Order(product, round(ask), -
+            sell_quantity))  # Sell order
+
+        return output
+
 class Trader:
     def __init__(self):
         self.products_strategy = {
             "KELP": Kelp(),
             "RAINFOREST_RESIN": Resin(),
-            "SQUID_INK": Squid()
+            "SQUID_INK": Squid(),
+            "CROISSANTS": Croissants(),
+            "JAMS": Jams(),
+            "DJEMBES": Djembes(),
+            "PICNIC_BASKET1": Picnic1(),
+            "PICNIC_BASKET2": Picnic2()
         }
 
     def run(self, state: TradingState) -> tuple[dict[Symbol, list[Order]], int, str]:
