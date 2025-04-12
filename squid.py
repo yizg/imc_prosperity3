@@ -243,8 +243,9 @@ class Resin(Product):
         super().__init__()
         self.limits = 50
 
-        self.SOFT_LIMIT = 0.9
+        self.SOFT_LIMIT = 0.9  # TODO ENTRE 0 ET 0.9
         self.MARGIN = 6
+        # TODO ENTRE 0 ET 6 (en vrai on sait pas ça depend du bid ask spread mais ça change pas grand chose)
 
     def get_fair_value(self, state: TradingState, product: str):
         return 10000
